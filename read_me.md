@@ -60,6 +60,13 @@ In the analysis steps three tables will be used to quantify the array length of 
 This table documents all individual arrays from different groups as well as their characteristics, found within the pseudocoded reads. It contains five columns:
 the array name, the array length, the pseudocode, read length and a column which indicates whether the array is intact or truncated.
 
+Example of length table:
+
+|array name |the array length |the pseudocode |read length| intact/truncated|
+|-----------|-----------------|---------------|-----------|----------------|
+|LTR_gypsy_Ogre| 6172| Y| 40976| T|
+|LasTR5| 299| R| 42386| I|
+
 The python command:
 ```sh
 /python_scripts/satellite_size_distribution_07.py -i coded_out -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_length_table
@@ -75,6 +82,14 @@ The python command:
 In order to better characterise the length distributions of arrays of satellite groups throughout the genome, the lengths of arrays were binned and summed.
 It contains four columns: summed lengths for intact arrays, summed length for truncated arrays and two more columns for the frequncy of occurence for intact and truncated arrays within each bin. Each row represents one bin.
 Each group has it's own cumulative length table.
+
+Example of binned table:
+
+|Intact_cumulative|Truncated_cumulative|Frequency_intact|Frequency_truncated|
+|-----------------|--------------------|----------------|-------------------|
+|0 | 0| 0| 0|
+|0 |0 | 0| 0|
+|13478| 13085| 1| 1|
 
 The python command:
 ```sh
