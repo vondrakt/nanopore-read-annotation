@@ -7,7 +7,7 @@ The first step to running the pipline is to run the LASTZ alignment program.
 For that a file with Nanopore reads and a file with reference sequences is needed.
 
 The sample Nanopore reads:
-/testing_data/sample_nanopore_reads_1-10
+/testing_data/sample_nanopore_reads
 
 The reference sequences:
 /testing_data/reference_database_satellite_and_retrotransposons
@@ -17,7 +17,7 @@ Promptly the filtered output is passed to a python script which will filter the 
 
 The LASTZ command and filtering:
 ```sh
-$ lastz /testing_data/sample_nanopore_reads_1-10[multiple,unmask] /testing_data/reference_database_satellite_and_retrotransposons --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
+$ lastz /testing_data/sample_nanopore_reads[multiple,unmask] /testing_data/reference_database_satellite_and_retrotransposons --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
 ```
 
 * option -b takes a minimum bit score value used for filtering (in this case the optimised value is 7000)
@@ -111,7 +111,7 @@ Adding another layer with protein domains could reveal if the assocation of the 
 The first step is very similar to the first step in the previous pseudocoding. The LASTZ alignment program is used to align the reference sequences to the Nanopore reads. However here the reference sequences must not contain mobile elements as they will overlap with the protein domains and the domains will not be visible in the pseudocoded reads.
 
 The sample Nanopore reads:
-/testing_data_protein_domains/sample_nanopore_reads_1-10
+/testing_data_protein_domains/sample_nanopore_reads
 
 The reference sequences:
 /testing_data_protein_domains/reference_database_satellites
@@ -120,7 +120,7 @@ The LASTZ output will be filtered in the same way as previously described.
 
 LASTZ command and filtering:
 ```sh
-lastz /testing_data_protein_domains/sample_nanopore_reads_1-10[multiple,unmask] /testing_data_protein_domains/reference_database_satellites --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
+lastz /testing_data_protein_domains/sample_nanopore_reads[multiple,unmask] /testing_data_protein_domains/reference_database_satellites --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
 ```
 
 # First pseudocoding
