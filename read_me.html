@@ -1,0 +1,311 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>read_me</title><style></style></head><body id="preview">
+<h1><a id="PSEUDOCODING_FOR_NANOPORE_READS_0"></a>PSEUDOCODING FOR NANOPORE READS</h1>
+<p>The goal of this pipeline is to provide information on the satellite array lengths throughout the genome as well as their association or lack thereof with different repetitive DNA sequences.<br>
+The pipeline consists of three main steps: running the LASTZ alignment program, pseudocoding and analysis.</p>
+<h1><a id="Running_the_LASTZ_alignment_program_4"></a>Running the LASTZ alignment program</h1>
+<p>The first step to running the pipline is to run the LASTZ alignment program.<br>
+For that a file with Nanopore reads and a file with reference sequences is needed.</p>
+<p>The sample Nanopore reads:<br>
+/mnt/raid/users/tihana/190227_LAS_two_datasets/analysis/for_manuscript/for_repository/testing_data/sample_nanopore_reads</p>
+<p>The reference sequences:<br>
+/mnt/raid/users/tihana/190227_LAS_two_datasets/analysis/for_manuscript/for_repository/testing_data/reference_database_satellite_and_retrotransposons</p>
+<p>The LASTZ tabular output is first filtered of comment lines which begin with a ‘#’ and sorted based on Nanopore read name.<br>
+Promptly the filtered output is passed to a python script which will filter the output based on a minimum bitscore value and maximum length of hit.</p>
+<p>The LASTZ command and filtering:</p>
+<pre><code class="language-sh">$ /mnt/raid/bin/lastz /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data/sample_nanopore_reads_1-<span class="hljs-number">10</span>[multiple,unmask] /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data/reference_database_satellite_and_retrotransposons --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=<span class="hljs-number">10</span> --hspthresh=<span class="hljs-number">1000</span> | grep -v <span class="hljs-string">"#"</span> | sort -k1 | /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/filtering_bit_score_and_percentage_02.py -b <span class="hljs-number">7000</span> -x <span class="hljs-number">1.23</span> &gt; lastz_out
+</code></pre>
+<ul>
+<li>option -b takes a minimum bit score value used for filtering (in this case the optimised value is 7000)</li>
+<li>option -x takes a maximum length of hit comparing to the length of the reference (in this case the optimised value of the length is no longer than 23% longer than the reference)</li>
+</ul>
+<h1><a id="Pseudocoding_25"></a>Pseudocoding</h1>
+<p>The LASTZ output is then used to create pseudocoded reads.</p>
+<p>The coding table is used to assign pseudocodes to hits. It consists of five columns. The hit name must be present in the IDs of the reference sequences, for example: &gt;LasTR3__11_9_sc_0.503375_l_49.<br>
+The part of the ID in front of the double underscore allows the pseudocoding script to match the hit to a corresponding pseudocode.<br>
+In coding of satellite sequences, the forward or reverse orientation is recognized and therefore the two pseudocodes are different.<br>
+However the orientation for retrotransposons is not, therefore the two pseudocodes are of the same case.<br>
+The minimum length columns provide a numerical value, these values will be used for filtering of contiguous arrays in cases where the length is below the minimum.<br>
+When two hits of a different group and different priorities are detected on the same region of the read, the hit with the higher priority will be documented in the pseudocoding.<br>
+On the other hand, if two hits of a different group and the same priority overlap, that overlap will be assigned a conflict and the pseudocode will be ‘X’.</p>
+<p>Example of coding table format:</p>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>hit name</th>
+<th>forward/reverse</th>
+<th>pseudocode</th>
+<th>minimum length</th>
+<th>priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LasTR3</td>
+<td>F</td>
+<td>O</td>
+<td>300</td>
+<td>3</td>
+</tr>
+<tr>
+<td>LasTR3</td>
+<td>R</td>
+<td>o</td>
+<td>300</td>
+<td>3</td>
+</tr>
+<tr>
+<td>LasTR4</td>
+<td>F</td>
+<td>P</td>
+<td>300</td>
+<td>3</td>
+</tr>
+<tr>
+<td>LasTR4</td>
+<td>R</td>
+<td>p</td>
+<td>300</td>
+<td>3</td>
+</tr>
+<tr>
+<td>LTR_Copia_other</td>
+<td>F</td>
+<td>W</td>
+<td>300</td>
+<td>2</td>
+</tr>
+<tr>
+<td>LTR_Copia_other</td>
+<td>R</td>
+<td>W</td>
+<td>300</td>
+<td>2</td>
+</tr>
+<tr>
+<td>LTR_gypsy_Athila</td>
+<td>F</td>
+<td>Q</td>
+<td>300</td>
+<td>2</td>
+</tr>
+<tr>
+<td>LTR_gypsy_Athila</td>
+<td>R</td>
+<td>Q</td>
+<td>300</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>The pseudocoding format:</p>
+<pre><code class="language-sh">cat  lastz_out | /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/pseudocoded_reads_priorities_04.py -c /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data/reference_database_satellite_and_retrotransposons.coding_table &gt; coded_out
+</code></pre>
+<h1><a id="Analysis_53"></a>Analysis</h1>
+<p>In the analysis steps three tables will be used to quantify the array length of satellites as well as the association of satellite groups.</p>
+<blockquote>
+<p>Array occurence</p>
+</blockquote>
+<p>This table documents all individual arrays from different groups as well as their characteristics, found within the pseudocoded reads. It contains five columns:<br>
+the array name, the array length, the pseudocode, read length and a column which indicates whether the array is intact or truncated.</p>
+<p>The python command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/satellite_size_distribution_07.py -i coded_out <span class="hljs-operator">-s</span> <span class="hljs-number">100</span> -c /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_length_table
+</code></pre>
+<ul>
+<li>option -i takes the pseudocoded multifasta file produced by the previous step</li>
+<li>option -s takes the first n number of bases which will create a boundary for classifying arrays as either intact or truncated</li>
+<li>option -c takes the coding table used for pseudocoding</li>
+<li>option -o takes the output name</li>
+</ul>
+<blockquote>
+<p>Cumulative length</p>
+</blockquote>
+<p>In order to better characterise the length distributions of arrays of satellite groups throughout the genome, the lengths of arrays were binned and summed.<br>
+It contains four columns: summed lengths for intact arrays, summed length for truncated arrays and two more columns for the frequncy of occurence for intact and truncated arrays within each bin. Each row represents one bin.<br>
+Each group has it’s own cumulative length table.</p>
+<p>The python command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences_02.py -i coded_length_table -n <span class="hljs-number">24</span> <span class="hljs-operator">-s</span> <span class="hljs-number">5000</span> -o cumulative_binning_table
+</code></pre>
+<ul>
+<li>option -i takes the length table created in the previous step</li>
+<li>option -n takes the number of bins</li>
+<li>option -s takes the bin size</li>
+<li>option -o takes the output name of the binning data</li>
+</ul>
+<blockquote>
+<p>The neighborhood profiles</p>
+</blockquote>
+<p>To quantify and visualise the assocation of different groups of satellites and mobile elements, the neighborhood profile table provides a density profile left and right of each arrayof a satellite group.<br>
+The window size od the profile can be changed but in this case the window size is 10kb.<br>
+Each group has it’s own output. The columns in the table match the positions within the windows left and right, while the rows correspond to different groups.</p>
+<p>Furthermore a base count table for each group is made. It is a profile of all the bases counted in the left and right windows.</p>
+<p>Python command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/profile_of_neighborhood_04.py -r coded_out -w <span class="hljs-number">10000</span> <span class="hljs-operator">-s</span> <span class="hljs-number">100</span> -c /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_neighborhood_profile
+</code></pre>
+<ul>
+<li>option -r takes the pseudocoded reads</li>
+<li>option -w takes the size of the window</li>
+<li>option -s takes the first n number of bases from which the incrementation will start</li>
+<li>option -c takes the coding table</li>
+<li>option -o takes the name of the pdf output</li>
+</ul>
+<h1><a id="PSEUDOCODING_FOR_NANOPORE_READS_WITH_PROTEIN_DOMAINS_104"></a>PSEUDOCODING FOR NANOPORE READS WITH PROTEIN DOMAINS</h1>
+<p>The pipeline also includes another pseudocoding step which proved useful when an association between satellites and retrotransposons was detected. The first two steps of the pipline (running LASTZ and pseudocoding) are the same but an additional pseudocoding step adds protein domain codes into existing pseudocoded reads.<br>
+Adding another layer with protein domains could reveal if the assocation of the satellites and retrotransposons is due by chance or if there is a biological significance to the association.</p>
+<h1><a id="Running_the_LASTZ_alignment_program_108"></a>Running the LASTZ alignment program</h1>
+<p>The first step is very similar to the first step in the previous pseudocoding. The LASTZ alignment program is used to align the reference sequences to the Nanopore reads. However here the reference sequences must not contain mobile elements as they will overlap with the protein domains and the domains will not be visible in the pseudocoded reads.</p>
+<p>The sample Nanopore reads:<br>
+/mnt/raid/users/tihana/190227_LAS_two_datasets/analysis/for_manuscript/for_repository/testing_data_protein_domains/sample_nanopore_reads_1-10</p>
+<p>The reference sequences:<br>
+/mnt/raid/users/tihana/190227_LAS_two_datasets/analysis/for_manuscript/for_repository/testing_data_protein_domains/reference_database_satellites</p>
+<p>The LASTZ output will be filtered in the same way as previously described.</p>
+<p>LASTZ command and filtering:</p>
+<pre><code class="language-sh">/mnt/raid/bin/lastz /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data_protein_domains/sample_nanopore_reads_1-<span class="hljs-number">10</span>[multiple,unmask] /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data_protein_domains/reference_database_satellites --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=<span class="hljs-number">10</span> --hspthresh=<span class="hljs-number">1000</span> | grep -v <span class="hljs-string">"#"</span> | sort -k1 | /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/filtering_bit_score_and_percentage_02.py -b <span class="hljs-number">7000</span> -x <span class="hljs-number">1.23</span> &gt; lastz_out
+</code></pre>
+<h1><a id="First_pseudocoding_124"></a>First pseudocoding</h1>
+<p>The first pseudocoding is to create pseudocoded reads only with satellite sequences.<br>
+For this a coding table is needed, however it is important that the pseudocodes assigned to the satellite groups differ from those assigned to protein domains. The coding tables for satellites and protein domains will be separate in the two pseudocoding steps. The coding table for the satellite groups will have the same format as described previously.</p>
+<p>First pseudocoding command:</p>
+<pre><code class="language-sh">cat  lastz_out | /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/pseudocoded_reads_priorities_04.py -c /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data_protein_domains/reference_database_satellites.coding_table &gt; coded_out
+</code></pre>
+<h1><a id="Second_pseudocoding_134"></a>Second pseudocoding</h1>
+<p>The second pseudocoding is to incorporate the protein domains into the existing pseudocoded reads, created in the previous step. The positions and names of the protein domains will be given in a gff format.<br>
+A different coding table for this step is needed. It will contain only three columns. The first column describes the lineage of the domain and type. The classification of the coding table must match that in the gff file in order to connect the annotation from gff to the pseudocode. The second column classifies the pseudocode as forward or reverse and the final column contains the pseudocodes.</p>
+<p>Example of coding table:</p>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>protein domain</th>
+<th>forward/reverse</th>
+<th>pseudocode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__GAG</td>
+<td>F</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat| Ogre__PROT</td>
+<td>F</td>
+<td>E</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__INT</td>
+<td>F</td>
+<td>N</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__RH</td>
+<td>F</td>
+<td>H</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__RT</td>
+<td>F</td>
+<td>C</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__aRH</td>
+<td>F</td>
+<td>B</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__GAG</td>
+<td>R</td>
+<td>y</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__PROT</td>
+<td>R</td>
+<td>e</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__INT</td>
+<td>R</td>
+<td>n</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__RH</td>
+<td>R</td>
+<td>h</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__RT</td>
+<td>R</td>
+<td>c</td>
+</tr>
+<tr>
+<td>Class_I|LTR|Ty3/gypsy|non-chromovirus|OTA|Tat|Ogre__aRH</td>
+<td>R</td>
+<td>b</td>
+</tr>
+</tbody>
+</table>
+<p>Second pseudocoding command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/tihana_pyscripts/<span class="hljs-number">180813</span>/creating_pseudocoded_reads_protein_domains/creating_pseudocoded_reads_protein_domains_02.py -i coded_out -c /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  &gt; coded_ogre_domains
+</code></pre>
+<ul>
+<li>option -i takes the previously created pseudocoded reads</li>
+<li>option -c takes the coding table made specificaly for the protein domain pseudocoding</li>
+<li>option -g takes the gff file</li>
+</ul>
+<h1><a id="Neighborhood_profiles_163"></a>Neighborhood profiles</h1>
+<p>The neighborhood profiles of the satellites are of primary interest in pseudocoded reads with protein domains. For the analysis the two existing coding table should be concatenated and provided to the python script.</p>
+<p>The python command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/tihana_pyscripts/<span class="hljs-number">180813</span>/profiles_of_neighborhood_protein_domains/profiles_of_neighborhood_protein_domains.py -r coded_ogre_domains -w <span class="hljs-number">10000</span> -c /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data_protein_domains/reference_database_satellites_and_Ogre_domains.coding_table <span class="hljs-operator">-s</span> <span class="hljs-number">100</span> -o coded_neighborhood_profiles
+</code></pre>
+<ul>
+<li>option -r takes the pseudocoded reads</li>
+<li>option -w takes the size of the window</li>
+<li>option -s takes the first n number of bases from which the incrementation will start</li>
+<li>option -c takes the coding table</li>
+<li>option -o takes the name of the pdf output</li>
+</ul>
+<h1><a id="Examples_of_data_visualisation_177"></a>Examples of data visualisation</h1>
+<p>Even though the tabular outputs can be visualised in different ways, here three plots will be used to visualise the data created by previously described steps.</p>
+<blockquote>
+<p>Scatterplot for frequency of array occurence</p>
+</blockquote>
+<p>This scatterplot is created with an R script. It shows the frequency of occurence of arrays with binned lengths. Each satellite and tranposable element group will have it’s own plot separate from the rest.<br>
+The length table from python script satellite_size_distribution_07.py is used as plotting data.</p>
+<p>R command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/R_scripts/visualisation_of_size_distribution_<span class="hljs-built_in">log</span>_05.R coded_length_table /mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/testing_data/reference_database_satellite_and_retrotransposons.coding_table <span class="hljs-number">120000</span> <span class="hljs-number">24</span> coded_frequency_of_occurence.pdf
+</code></pre>
+<ul>
+<li>Firstly the length table from the previous python script is provided, the coding table, the limiting bin, the number of bins and the pdf name. The limiting bin serves as an upper boundary. If there are arrays longer than the limiting bin, they will be pooled together in the last bin.</li>
+</ul>
+<blockquote>
+<p>Cumulative length histogram</p>
+</blockquote>
+<p>The cumulative length histogram includes binning array lengths and summing the values within the bins.<br>
+Firstly a python script prepares the length table from python script satellite_size_distribution_07.py with binning the data.</p>
+<p>The python command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences_02.py -i coded_length_table -n <span class="hljs-number">24</span> <span class="hljs-operator">-s</span> <span class="hljs-number">5000</span> -o cumulative_binning_table
+</code></pre>
+<ul>
+<li>option -i takes the length table created in the previous step</li>
+<li>option -n takes the number of bins</li>
+<li>option -s takes the bin size</li>
+<li>option -o takes the output name of the binning data</li>
+</ul>
+<p>The plotting is then performed by an R script.  Each satellite and tranposable element group will have it’s own plot separate from the rest.</p>
+<p>The R command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/<span class="hljs-number">190227</span>_LAS_two_datasets/analysis/<span class="hljs-keyword">for</span>_manuscript/<span class="hljs-keyword">for</span>_repository/R_scripts/plotting_cumulative_lengths_and_frequency_of_occurence.R . cumulative_binning_table <span class="hljs-number">5000</span> <span class="hljs-number">24</span> coded_cumulative_lengths.pdf
+</code></pre>
+<ul>
+<li>the first argument takes the path to the binning data in case where it is not in the working directory, while the second argument takes the pattern which is to be searched in the path since each group of elements has it’s own binning output, after this the bin size and number is provided and at the end the name of the pdf file to which to write the data</li>
+</ul>
+<blockquote>
+<p>Neighborhood profiles of satellites and retrotransposons</p>
+</blockquote>
+<p>This plot shows the association or lack thereof between different groups of satellites and mobile elements within a n kb window (in our case it is 10kb). In this example the density profiles of satellites and retrotransposons were plotted, if however the profiles of satellites and domains are needed,<br>
+the two coding domains used for pseudocoding (satellite and coding table) must be concatenated and provided to the R script.</p>
+<p>The R command:</p>
+<pre><code class="language-sh">/mnt/raid/users/tihana/tihana_rscipts/plotting_profiles_of_satellite_neighborhood/plotting_profiles_of_satellite_neighborhood_02.R . coded_neighborhood_profile base_count coded_neighborhood_profile.pdf <span class="hljs-number">10000</span>
+</code></pre>
+<ul>
+<li>the first argument takes the path to the tabular output of the python script in case where it is not in the working directory, the second argument defines the two patterns to be searched in the path since each group has it’s own tabular output, then there is the final pdf name and the window size</li>
+</ul>
+
+</body></html>
