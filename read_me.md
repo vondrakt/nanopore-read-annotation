@@ -36,6 +36,7 @@ When two hits of a different group and different priorities are detected on the 
 On the other hand, if two hits of a different group and the same priority overlap, that overlap will be assigned a conflict and the pseudocode will be 'X'.
 
 Example of coding table format:
+
 |hit name|forward/reverse|pseudocode|minimum length|priority|
 |--------|---------------|----------|--------------|--------|
 |LasTR3| F | O | 300 | 3 |
@@ -138,6 +139,7 @@ The second pseudocoding is to incorporate the protein domains into the existing 
 A different coding table for this step is needed. It will contain only three columns. The first column describes the lineage of the domain and type. The classification of the coding table must match that in the gff file in order to connect the annotation from gff to the pseudocode. The second column classifies the pseudocode as forward or reverse and the final column contains the pseudocodes.
 
 Example of coding table:
+
 | protein domain | forward/reverse | pseudocode |
 |---------------------------------------------------------------|-----|-----|
 | Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__GAG	| F | Y |
