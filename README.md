@@ -17,7 +17,7 @@ Promptly the filtered output is passed to a python script which will filter the 
 
 The LASTZ command and filtering:
 ```sh
-$ lastz /testing_data/sample_nanopore_reads[multiple,unmask] /testing_data/reference_database_satellite_and_retrotransposons --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
+$ lastz /testing_data/sample_nanopore_reads[multiple,unmask] /testing_data/reference_database_satellite_and_retrotransposons --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage.py -b 7000 -x 1.23 > lastz_out
 ```
 
 * Option -b takes a minimum bit score value used for filtering (in this case the optimised value is 7000)
@@ -51,7 +51,7 @@ Example of coding table format:
 
 The pseudocoding command:
 ```sh
-cat  lastz_out | /python_scripts/pseudocoded_reads_priorities_04.py -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table > coded_out
+cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table > coded_out
 ```
 # Analysis
 In the analysis steps three tables will be used to quantify the array length of satellites as well as the association of satellite groups.
@@ -70,7 +70,7 @@ Example of length table:
 
 The python command:
 ```sh
-/python_scripts/satellite_size_distribution_07.py -i coded_out -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_length_table
+/python_scripts/satellite_size_distribution.py -i coded_out -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_length_table
 ```
 
 * Option -i takes the pseudocoded multifasta file produced by the previous step
@@ -94,7 +94,7 @@ Example of binned table:
 
 The python command:
 ```sh
-/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences_02.py -i coded_length_table -n 24 -s 5000 -o cumulative_binning_table
+/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences.py -i coded_length_table -n 24 -s 5000 -o cumulative_binning_table
 ```
 * Option -i takes the length table created in the previous step 
 * Option -n takes the number of bins
@@ -111,7 +111,7 @@ Furthermore a base count table for each group is made. It is a profile of all th
 
 Python command:
 ```sh
-/python_scripts/profile_of_neighborhood_04.py -r coded_out -w 10000 -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_neighborhood_profile
+/python_scripts/profile_of_neighborhood.py -r coded_out -w 10000 -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_neighborhood_profile
 ```
 * Option -r takes the pseudocoded reads
 * Option -w takes the size of the window
@@ -146,7 +146,7 @@ For this a coding table is needed, however it is important that the pseudocodes 
 
 First pseudocoding command:
 ```sh
-cat  lastz_out | /python_scripts/pseudocoded_reads_priorities_04.py -c /testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
+cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
 ```
 
 # Second pseudocoding
@@ -173,7 +173,7 @@ Example of coding table:
 
 Second pseudocoding command:
 ```sh
-/python_scripts/creating_pseudocoded_reads_protein_domains_02.py -i coded_out -c /testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  > coded_ogre_domains
+/python_scripts/creating_pseudocoded_reads_protein_domains.py -i coded_out -c /testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  > coded_ogre_domains
 ```
 * Option -i takes the previously created pseudocoded reads
 * Option -c takes the coding table made specificaly for the protein domain pseudocoding
@@ -204,7 +204,7 @@ The length table from python script satellite_size_distribution_07.py is used as
 
 R command:
 ```sh
-/R_scripts/visualisation_of_size_distribution_log_05.R coded_length_table /testing_data/reference_database_satellite_and_retrotransposons.coding_table 120000 24 coded_frequency_of_occurence.pdf
+/R_scripts/visualisation_of_size_distribution_log.R coded_length_table /testing_data/reference_database_satellite_and_retrotransposons.coding_table 120000 24 coded_frequency_of_occurence.pdf
 ```
 
 * Firstly the length table from the previous python script is provided, the coding table, the limiting bin, the number of bins and the pdf name. The limiting bin serves as an upper boundary. If there are arrays longer than the limiting bin, they will be pooled together in the last bin.
@@ -216,7 +216,7 @@ Firstly a python script prepares the length table from python script satellite_s
 
 The python command:
 ```sh
-/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences_02.py -i coded_length_table -n 24 -s 5000 -o cumulative_binning_table
+/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences.py -i coded_length_table -n 24 -s 5000 -o cumulative_binning_table
 ```
 
 * Option -i takes the length table created in the previous step 
@@ -240,7 +240,7 @@ the two coding domains used for pseudocoding (satellite and coding table) must b
 
 The R command:
 ```sh
-/R_scripts/plotting_profiles_of_satellite_neighborhood_02.R . coded_neighborhood_profile base_count coded_neighborhood_profile.pdf 10000
+/R_scripts/plotting_profiles_of_satellite_neighborhood.R . coded_neighborhood_profile base_count coded_neighborhood_profile.pdf 10000
 ```
 
 * The first argument takes the path to the tabular output of the python script in case where it is not in the working directory, the second argument defines the two patterns to be searched in the path since each group has it's own tabular output, then there is the final pdf name and the window size
