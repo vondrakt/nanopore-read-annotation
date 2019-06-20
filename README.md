@@ -1,8 +1,10 @@
-# PSEUDOCODING FOR NANOPORE READS
+# Annotation of repeats in Oxford Nanopore reads
+
+## Annotation of satellite repeats
 The goal of this pipeline is to provide information on the satellite array lengths throughout the genome as well as their association or lack thereof with different repetitive DNA sequences.
 The pipeline consists of three main steps: running the LASTZ alignment program, pseudocoding and analysis.
 
-# Running the LASTZ alignment program
+### Running the LASTZ alignment program
 The first step to running the pipline is to run the LASTZ alignment program.
 For that a file with Nanopore reads and a file with reference sequences is needed.
 
@@ -23,7 +25,7 @@ $ lastz /testing_data/sample_nanopore_reads[multiple,unmask] /testing_data/refer
 * Option -b takes a minimum bit score value used for filtering (in this case the optimised value is 7000)
 * Option -x takes a maximum length of hit comparing to the length of the reference (in this case the optimised value of the length is no longer than 23% longer than the reference)
 
-# Pseudocoding
+### Pseudocoding
 
 The LASTZ output is then used to create pseudocoded reads.
 
@@ -53,7 +55,7 @@ The pseudocoding command:
 ```sh
 cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table > coded_out
 ```
-# Analysis
+### Analysis
 In the analysis steps three tables will be used to quantify the array length of satellites as well as the association of satellite groups.
 
 > Array occurence
@@ -119,11 +121,12 @@ Python command:
 * Option -c takes the coding table
 * Option -o takes the name of the pdf output
 
-# PSEUDOCODING FOR NANOPORE READS WITH PROTEIN DOMAINS
+## Annotation of mobile elements protein domains
+
 The pipeline also includes another pseudocoding step which proved useful when an association between satellites and retrotransposons was detected. The first two steps of the pipline (running LASTZ and pseudocoding) are the same but an additional pseudocoding step adds protein domain codes into existing pseudocoded reads. 
 Adding another layer with protein domains could reveal if the assocation of the satellites and retrotransposons is due by chance or if there is a biological significance to the association.
 
-# Running the LASTZ alignment program
+### Running the LASTZ alignment program
 The first step is very similar to the first step in the previous pseudocoding. The LASTZ alignment program is used to align the reference sequences to the Nanopore reads. However here the reference sequences must not contain mobile elements as they will overlap with the protein domains and the domains will not be visible in the pseudocoded reads.
 
 The sample Nanopore reads:
@@ -139,7 +142,7 @@ LASTZ command and filtering:
 lastz /testing_data_protein_domains/sample_nanopore_reads[multiple,unmask] /testing_data_protein_domains/reference_database_satellites --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
 ```
 
-# First pseudocoding
+### First pseudocoding
 
 The first pseudocoding is to create pseudocoded reads only with satellite sequences.
 For this a coding table is needed, however it is important that the pseudocodes assigned to the satellite groups differ from those assigned to protein domains. The coding tables for satellites and protein domains will be separate in the two pseudocoding steps. The coding table for the satellite groups will have the same format as described previously.
@@ -149,7 +152,7 @@ First pseudocoding command:
 cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
 ```
 
-# Second pseudocoding
+### Second pseudocoding
 
 The second pseudocoding is to incorporate the protein domains into the existing pseudocoded reads, created in the previous step. The positions and names of the protein domains will be given in a gff format. 
 A different coding table for this step is needed. It will contain only three columns. The first column describes the lineage of the domain and type. The classification of the coding table must match that in the gff file in order to connect the annotation from gff to the pseudocode. The second column classifies the pseudocode as forward or reverse and the final column contains the pseudocodes.
@@ -193,7 +196,7 @@ The python command:
 * Option -c takes the coding table
 * Option -o takes the name of the pdf output
 
-# Examples of data visualisation
+## Examples of data visualisation
 
 Even though the tabular outputs can be visualised in different ways, here three plots will be used to visualise the data created by previously described steps.
 
