@@ -1,19 +1,26 @@
 # Annotation of repeats in Oxford Nanopore reads
 
-**Paper:Genome-wide characterization of satellite DNA arrays in a complex plant
-genome using nanopore reads (*In preparation*)**
+**Paper: Genome-wide characterization of satellite DNA arrays in a complex plant genome using nanopore reads (*In preparation*)**
 
 Authors(paper): Tihana Vondrak, Laura Ávila Robledillo, Petr Novák, Andrea
 Koblížková, Pavel Neumann and Jiří Macas
 
-The text includes scripts and instruction how to annotated Oxford Nanopore reads
-based on the reference libraries of repetitive sequences and how to calculated
-neighborhood density profiles.
+**Dependencies**
+- python3 (https://www.python.org) with Biopython (https://biopython.org/)
+- R programming environment (https://www.r-project.org/) with installed packages
+  Rfast, TRclust and  Biostrings (http://www.bioconductor.org/)
+- LASTZ program (https://github.com/lastz/lastz)
+
+The text includes scripts and instruction how to annotate Oxford Nanopore reads
+based on the reference libraries of repetitive sequences, calculation of
+neighborhood density profiles and periodicity analysis using fast Fourier
+transform and autocorrelation.
+
 <hr>
 <figure>
 <img src="./figures/scheme_05.png" alt="Analysis strategy" width="500"/>
 <figcaption>
-Schematic representation of the analysis strategy. (A) Nanopore read (gray bar) containing
+<strong>Fig. 1 Schematic representation of the analysis strategy.</strong> (A) Nanopore read (gray bar) containing
 arrays of satellites A (orange) and B (green). The orientations of the arrays with respect to sequences in the
 reference database are indicated. (B) LASTZ search against the reference database results in similarity hits
 (displayed as arrows showing their orientation, with colors distinguishing satellite sequences) that are
@@ -45,19 +52,19 @@ The pipeline consists of three main steps:
  - Analysis of satellite arrays characteristics.
 
 ### Running the LASTZ similarity search
-The first step to running the pipline is to run the LASTZ alignment program.
-For that a fasta file with Nanopore reads and a file with reference sequences is needed.
+The first step in the pipline is to run the LASTZ alignment program and
+filtering similarity hits. For that a fasta file with Nanopore reads and a file
+with reference sequences is needed.
 
-The sample Nanopore reads:
+The example of input data:
 
-`/testing_data/sample_nanopore_reads`
+Nanopore reads: `/testing_data/sample_nanopore_reads`
 
-The reference sequences:
-
-`/testing_data/reference_database_satellite_and_retrotransposons`
+The reference sequences: `/testing_data/reference_database_satellite_and_retrotransposons`
 
 The LASTZ tabular output is first filtered of comment lines which begin with a '#' and sorted based on Nanopore read name.
-Promptly the filtered output is passed to a python script which will filter the output based on a minimum bitscore value and maximum length of hit.
+Promptly the filtered output is passed to a python script which will filter the
+output based on a minimum bitscore value and maximum length of hit.(Fig 1A-C)
 
 The LASTZ command and filtering:
 ```sh
@@ -76,7 +83,7 @@ lastz testing_data/sample_nanopore_reads[multiple,unmask] testing_data/reference
 
 ### Parsing similarity search to coded reads
 
-The LASTZ output is then parsed to create coded reads.
+The LASTZ output is then parsed to create coded reads (Fig1.D-E).
 
 The coding table is used to assign codes to individual similarity hits based on
 the type of the repeat, orientation, minimum length and priority. 
@@ -98,12 +105,12 @@ Example of coding table format:
 
 The *repeat name* in the coding table must correspond to the ID used in reference
 sequence library followed by double underscore. For example fasta sequence name
-`>LasTR3__11_9_sc_0.503375_l_49`  correspond to repeat name `LasTR3` 
+`>LasTR3__11_9_sc_0.503375_l_49`  correspond to repeat name `LasTR3`. 
 
 For satellite sequences, forward and reverse orientation of the repeat is
 distinguished using upper and lower case codes. In case of retrotransposons
 repeats, orientation is not recorded and thus codes are only uppercase. The
-arrays of similarity hits which were shorter than the *minimum length* are
+arrays of similarity hits which are shorter than the *minimum length* are
 filtered out. When similarity hits to different type of repeats are detected on
 the same region of the read, the code with the higher *priority* (i.e. lower
 numerical value ) is recorded. On the other hand, if overlapping similarity hits
@@ -119,7 +126,8 @@ cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_dat
 ### Analysis of repeat characteristics
 
 In this steps, coded reads are analyzed to quantify occurence of arrays of repeats
-in the reads, arrays length distribution and association (co-occurence) of individual repeat types. 
+in the reads, arrays length distribution and association (co-occurence) of
+individual repeat types (Fig.1F-G). 
 
 #### Array lengths summary
 
@@ -128,19 +136,19 @@ The length of array of repeats is calculated from coded reads using command:
 python_scripts/satellite_size_distribution.py -i coded_out -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_length_table
 ```
 
-> - Option -i takes the pseudocoded multifasta file produced by the previous step
-> - Option -s takes the first n number of bases which will create a boundary for classifying arrays as either intact or truncated
-> - Option -c takes the coding table used for pseudocoding
-> - Option -o takes the output name
+> - -i coded reads as multifasta file produced by the previous step
+> - -s the first n number of bases which will create a boundary for classifying arrays as either intact or truncated
+> - -c the coding table used for read coding
+> - -o output file name
 
 Output `coded_length_table` summarized all individual arrays from different
 groups as well as their characteristics, extracted from the coded reads. It
-contains five columns: the array name, the array length, the pseudocode, read
+contains five columns: the array name, the array length, encoding, read
 length and a column which indicates whether the array is intact or truncated.
 
 Example of length table:
 
-| array name     | the array length | the pseudocode | read length | intact/truncated |
+| array name     | the array length | code           | read length | intact/truncated |
 |----------------|------------------|----------------|-------------|------------------|
 | LTR_gypsy_Ogre |             6172 | Y              |       40976 | T                |
 | LasTR5         |              299 | R              |       42386 | I                |
@@ -167,11 +175,11 @@ represents one bin. Each group has it's own cumulative length table.
 Example of binned table:
 
 
-| Sum_of_length (Intact) | Sum_of_length (Truncated)  | Frequency_intact | Frequency_truncated |
-|------------------------|----------------------------|------------------|---------------------|
-|                      0 |                          0 |                0 |                   0 |
-|                      0 |                          0 |                0 |                   0 |
-|                  13478 |                      13085 |                1 |                   1 |
+| Sum_of_length (Intact) | Sum_of_length (Truncated) | Frequency(intact) | Frequency(truncated) |
+|------------------------|---------------------------|-------------------|----------------------|
+|                      0 |                         0 |                 0 |                    0 |
+|                      0 |                         0 |                 0 |                    0 |
+|                  13478 |                     13085 |                 1 |                    1 |
 
 
 
@@ -200,23 +208,21 @@ left and right windows.
 
 ## Alternative annotation of repeats using protein domains
 
-Alternative annotation of repeats uses reference DNA sequences for annotation of
-satellites only while mobile elements are annotated based on the similarity to
+Alternative annotation of repeats uses reference DNA sequences onyl for annotation of
+satellites while mobile elements are annotated based on the similarity to
 conserved protein domains using DANTE tool. Both
 annotation are then combined together.
 
 ### Annotation of satellites using LASTZ similarity search
 Search is performed against library reference satellited sequences:
 
-The sample Nanopore reads:
+Example input data:
 
-`testing_data_protein_domains/sample_nanopore_reads`
+The Nanopore reads: `testing_data_protein_domains/sample_nanopore_reads`
 
-The reference sequences:
+The reference sequences: `testing_data_protein_domains/reference_database_satellites`
 
-`testing_data_protein_domains/reference_database_satellites`
-
-The LASTZ output will be filtered in the same way as previously described.
+The LASTZ output is filtered in the same way as previously described.
 
 
 ```sh
@@ -236,7 +242,7 @@ protein database (http://www.repeatexplorer.org)⁠. The hits were filtered to p
 following cutoff parameters: minimum identity = 0.3, min. similarity = 0.4, min.
 alignment length = 0.7, max. interruptions (frameshifts or stop codons) = 10,
 max. length proportion = 1.2, and protein domain type = ALL. Annotation obtain from DANTE
-program in gff3 format were then used for further processing.Example of DANTE
+program in gff3 format were then used for further processing. Example of DANTE
 output is in file `testing_data_protein_domains/gff_sample` 
 
 
@@ -247,13 +253,15 @@ Annotation of satellites and mobile element protein domains are combined in two
 step. First step creates coded reads based on the satellite annotation only:
 
 ```sh
-cat  lastz_out | python_scripts/pseudocoded_reads_priorities.py -c testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
+cat  lastz_out | python_scripts/pseudocoded_reads_priorities.py \
+    -c testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
 ```
 
 The second step add annotation of protein domains to previously satellite coded reads:
 
 ```sh
-/python_scripts/creating_pseudocoded_reads_protein_domains.py -i coded_out -c /testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  > coded_ogre_domains
+/python_scripts/creating_pseudocoded_reads_protein_domains.py -i coded_out \
+  -c /testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  > coded_ogre_domains
 ```
 > - -i input file with previousle coded reads
 > - -c coding table specific for protein domain
@@ -265,8 +273,8 @@ table for protein domain can be found in file
 [reference_database_satellites_and_Ogre_domains.coding_table](./testing_data_protein_domains/reference_database_Ogre_domains.coding_table)
 
 ###  Neighborhood density profiles
-The neighborhood profiles of the satellites are evaluated as describe above with
-some modification - the coding table used for the analysis is file concatatened
+The neighborhood profiles of the satellites are evaluated as described above with
+some modification - the coding table used for the analysis is a file concatenated
 from satellite coding table and domains coding table.
 
 ```sh
@@ -284,57 +292,22 @@ from satellite coding table and domains coding table.
 
 
 ## Periodicity analysis
-**TODO**
 
-## Examples of data visualisation
+Periodicity analysis is performed on sequences in fasta file contains. Each
+sequence in fasta file must contain array of single satellite type.
+For analysis, only arrays with length over 30kb were used. Non
+satellite sequences were trimmed off. 
 
-Even though the tabular outputs can be visualised in different ways, here three plots will be used to visualise the data created by previously described steps.
-
-> Scatterplot for frequency of array occurence
-
-This scatterplot is created with an R script. It shows the frequency of occurence of arrays with binned lengths. Each satellite and tranposable element group will have it's own plot separate from the rest.
-The length table from python script satellite_size_distribution_07.py is used as plotting data.
-
-R command:
+Usage:
 ```sh
-/R_scripts/visualisation_of_size_distribution_log.R coded_length_table /testing_data/reference_database_satellite_and_retrotransposons.coding_table 120000 24 coded_frequency_of_occurence.pdf
-```
+R_scripts/get_periodicity_spectra.R  *.fasta
+````
 
-* Firstly the length table from the previous python script is provided, the coding table, the limiting bin, the number of bins and the pdf name. The limiting bin serves as an upper boundary. If there are arrays longer than the limiting bin, they will be pooled together in the last bin.
+Output is writtent into files `*.fasta_periodicity_fft.RDS` and
+`*.fasta_periodicity_acf.RDS` which contain periodicity spectra calculated by
+fast Fourier transform and by autocorelation respectively. Each output file
+represent R object which contain periodicity spectra for every analyzed
+satellite array in form of list.
 
-> Cumulative length histogram
 
-The cumulative length histogram includes binning array lengths and summing the values within the bins. 
-Firstly a python script prepares the length table from python script satellite_size_distribution_07.py with binning the data. 
-
-The python command:
-```sh
-/python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences.py -i coded_length_table -n 24 -s 5000 -o cumulative_binning_table
-```
-
-* Option -i takes the length table created in the previous step 
-* Option -n takes the number of bins
-* Option -s takes the bin size
-* Option -o takes the output name of the binning data
-
-The plotting is then performed by an R script.  Each satellite and tranposable element group will have it's own plot separate from the rest.
-
-The R command:
-```sh
-/R_scripts/plotting_cumulative_lengths_and_frequency_of_occurence.R . cumulative_binning_table 5000 24 coded_cumulative_lengths.pdf
-```
-
-* The first argument takes the path to the binning data in case where it is not in the working directory, while the second argument takes the pattern which is to be searched in the path since each group of elements has it's own binning output, after this the bin size and number is provided and at the end the name of the pdf file to which to write the data
-
-> Neighborhood profiles of satellites and retrotransposons
-
-This plot shows the association or lack thereof between different groups of satellites and mobile elements within a n kb window (in our case it is 10 kb). In this example the density profiles of satellites and retrotransposons were plotted, if however the profiles of satellites and domains are needed,
-the two coding domains used for pseudocoding (satellite and coding table) must be concatenated and provided to the R script.
-
-The R command:
-```sh
-/R_scripts/plotting_profiles_of_satellite_neighborhood.R . coded_neighborhood_profile base_count coded_neighborhood_profile.pdf 10000
-```
-
-* The first argument takes the path to the tabular output of the python script in case where it is not in the working directory, the second argument defines the two patterns to be searched in the path since each group has it's own tabular output, then there is the final pdf name and the window size
 
