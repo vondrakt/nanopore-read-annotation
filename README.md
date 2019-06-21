@@ -1,5 +1,36 @@
 # Annotation of repeats in Oxford Nanopore reads
 
+**Paper:Genome-wide characterization of satellite DNA arrays in a complex plant
+genome using nanopore reads (*In preparation*)**
+
+Authors(paper): Tihana Vondrak, Laura Ávila Robledillo, Petr Novák, Andrea
+Koblížková, Pavel Neumann and Jiří Macas
+
+The text includes scripts and instruction how to annotated Oxford Nanopore reads
+based on the reference libraries of repetitive sequences and how to calculated
+neighborhood density profiles.
+<hr>
+<figure>
+<img src="./figures/scheme_05.png" alt="Analysis strategy" width="500"/>
+<figcaption>
+Schematic representation of the analysis strategy. (A) Nanopore read (gray bar) containing
+arrays of satellites A (orange) and B (green). The orientations of the arrays with respect to sequences in the
+reference database are indicated. (B) LASTZ search against the reference database results in similarity hits
+(displayed as arrows showing their orientation, with colors distinguishing satellite sequences) that are
+quality-filtered to remove non-specific hits (C). The filtered hits are used to identify the satellite arrays as
+regions of specified minimal length that are covered by overlapping hits to the same repeat (D). The
+positions of these regions are recorded in the form of coded reads where the sequences are replaced by
+satellite codes and array orientations are distinguished using uppercase and lowercase characters (E). The
+coded reads are then used for various downstream analyses. (F) Array lengths are extracted and analyzed
+regardless of orientation of the arrays but while distinguishing the complete and truncated arrays (here it is
+shown for satellite A). (G) Analysis of the sequences adjacent to the satellite arrays includes 10 kb regions
+upstream (-) and downstream (+) of the array. This analysis is performed with respect to the array
+orientation (compare the positions of upstream and downstream regions for arrays in forward (A1, A3)
+versus reverse orientation (A2)).
+</figcaption>
+</figure>
+<hr>
+
 ## Annotation of satellite repeats
 The goal of this pipeline is to provide annotation of satellite repeats in
 Oxford Nanopore reads using similarity search against library of reference
@@ -36,9 +67,9 @@ lastz testing_data/sample_nanopore_reads[multiple,unmask] testing_data/reference
       -b 7000 -x 1.23 > lastz_out
 ```
 
-> - Option -b takes a minimum bit score value used for filtering (in this case the
+> - -b   minimum bit score value used for filtering (in this case the
 >   optimised value is 7000)
-> - Option -x takes a maximum length of hit comparing to the length of the
+> - -x   maximum length of hit comparing to the length of the
 >   reference (in this case the optimised value of the length is no longer than
 >   23% longer than the reference)
 
@@ -123,10 +154,10 @@ command:
 ```sh
 /python_scripts/plotting_cumulative_lengths_and_frequency_of_occurences.py -i coded_length_table -n 24 -s 5000 -o cumulative_binning_table
 ```
-> - Option -i takes the length table created in the previous step 
-> - Option -n takes the number of bins
-> - Option -s takes the bin size
-> - Option -o takes the output name of the binning data
+> - -i length table created in the previous step 
+> - -n number of bins
+> - -s bin size
+> - -o output file name of the binning data
 
 Output `cummulative_bining_table` contains four columns: summed lengths for
 intact arrays, summed length for truncated arrays and two more columns for the
@@ -151,11 +182,11 @@ mobile elements, surrounding of each satellite types is analyzed:
 ```sh
 /python_scripts/profile_of_neighborhood.py -r coded_out -w 10000 -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_neighborhood_profile
 ```
-> - Option -r takes the pseudocoded reads
-> - Option -w takes the size of the window
-> - Option -s takes the first n number of bases from which the incrementation will start 
-> - Option -c takes the coding table
-> - Option -o takes the name of the pdf output
+> - -r input file with coded reads
+> - -w window size
+> - -s the first n number of bases from which the incrementation will start 
+> - -c coding table file
+> - -o output file name (pdf format)
 
 The output `coded_neighborhood_profile` table provides a density profile left
 and right of each array of a satellite group. The window size of the profile can
@@ -167,80 +198,93 @@ left and right windows.
 
 
 
-## Annotation of mobile elements protein domains
+## Alternative annotation of repeats using protein domains
 
-The pipeline also includes another pseudocoding step which proved useful when an association between satellites and retrotransposons was detected. The first two steps of the pipline (running LASTZ and pseudocoding) are the same but an additional pseudocoding step adds protein domain codes into existing pseudocoded reads. 
-Adding another layer with protein domains could reveal if the assocation of the satellites and retrotransposons is due by chance or if there is a biological significance to the association.
+Alternative annotation of repeats uses reference DNA sequences for annotation of
+satellites only while mobile elements are annotated based on the similarity to
+conserved protein domains using DANTE tool. Both
+annotation are then combined together.
 
-### Running the LASTZ alignment program
-The first step is very similar to the first step in the previous pseudocoding. The LASTZ alignment program is used to align the reference sequences to the Nanopore reads. However here the reference sequences must not contain mobile elements as they will overlap with the protein domains and the domains will not be visible in the pseudocoded reads.
+### Annotation of satellites using LASTZ similarity search
+Search is performed against library reference satellited sequences:
 
 The sample Nanopore reads:
-/testing_data_protein_domains/sample_nanopore_reads
+
+`testing_data_protein_domains/sample_nanopore_reads`
 
 The reference sequences:
-/testing_data_protein_domains/reference_database_satellites
+
+`testing_data_protein_domains/reference_database_satellites`
 
 The LASTZ output will be filtered in the same way as previously described.
 
-LASTZ command and filtering:
+
 ```sh
-lastz /testing_data_protein_domains/sample_nanopore_reads[multiple,unmask] /testing_data_protein_domains/reference_database_satellites --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
+lastz testing_data_protein_domains/sample_nanopore_reads[multiple,unmask] \
+      testing_data_protein_domains/reference_database_satellites \
+      --format=general:name1,size1,start1,length1,strand1,name2,size2,start2,length2,strand2,identity,score \
+      --ambiguous=iupac --xdrop=10 --hspthresh=1000 | grep -v "#" | sort -k1 | \
+    /python_scripts/filtering_bit_score_and_percentage_02.py -b 7000 -x 1.23 > lastz_out
 ```
 
-### First pseudocoding
+### Annotation of mobile element using DANTE
+Detection of the retrotransposon protein coding domains in the read sequences
+was performed using DANTE, which is a bioinformatics tool available on the
+RepeatExplorer server (https://repeatexplorer-elixir.cerit-sc.cz). DANTE perform
+repeat annotation based on the similarity searches against the REXdb
+protein database (http://www.repeatexplorer.org)⁠. The hits were filtered to pass the
+following cutoff parameters: minimum identity = 0.3, min. similarity = 0.4, min.
+alignment length = 0.7, max. interruptions (frameshifts or stop codons) = 10,
+max. length proportion = 1.2, and protein domain type = ALL. Annotation obtain from DANTE
+program in gff3 format were then used for further processing.Example of DANTE
+output is in file `testing_data_protein_domains/gff_sample` 
 
-The first pseudocoding is to create pseudocoded reads only with satellite sequences.
-For this a coding table is needed, however it is important that the pseudocodes assigned to the satellite groups differ from those assigned to protein domains. The coding tables for satellites and protein domains will be separate in the two pseudocoding steps. The coding table for the satellite groups will have the same format as described previously.
 
-First pseudocoding command:
+
+### Parsing annotations to coded reads
+
+Annotation of satellites and mobile element protein domains are combined in two
+step. First step creates coded reads based on the satellite annotation only:
+
 ```sh
-cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
+cat  lastz_out | python_scripts/pseudocoded_reads_priorities.py -c testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
 ```
 
-### Second pseudocoding
+The second step add annotation of protein domains to previously satellite coded reads:
 
-The second pseudocoding is to incorporate the protein domains into the existing pseudocoded reads, created in the previous step. The positions and names of the protein domains will be given in a gff format. 
-A different coding table for this step is needed. It will contain only three columns. The first column describes the lineage of the domain and type. The classification of the coding table must match that in the gff file in order to connect the annotation from gff to the pseudocode. The second column classifies the pseudocode as forward or reverse and the final column contains the pseudocodes.
-
-Example of coding table:
-
-| protein domain | forward/reverse | pseudocode |
-|---------------------------------------------------------------|-----|-----|
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__GAG	| F | Y |
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\| Ogre__PROT | F | E |
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__INT | F | N |
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__RH | F | H |
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__RT | F | C |
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__aRH | F | B |
-| Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__GAG | R | y |
-|Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__PROT	| R	| e |
-|Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__INT|	R|	n|
-|Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__RH|	R|	h|
-|Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__RT|	R|	c|
-|Class_I\|LTR\|Ty3/gypsy\|non-chromovirus\|OTA\|Tat\|Ogre__aRH|	R|	b|
-
-Second pseudocoding command:
 ```sh
 /python_scripts/creating_pseudocoded_reads_protein_domains.py -i coded_out -c /testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  > coded_ogre_domains
 ```
-* Option -i takes the previously created pseudocoded reads
-* Option -c takes the coding table made specificaly for the protein domain pseudocoding
-* Option -g takes the gff file 
+> - -i input file with previousle coded reads
+> - -c coding table specific for protein domain
+> - -g gff file with protein domains annotation 
 
-# Neighborhood profiles
-The neighborhood profiles of the satellites are of primary interest in pseudocoded reads with protein domains. For the analysis the two existing coding table should be concatenated and provided to the python script.
+The coding table specific for protein domains contain information about domain
+classification and type(according REXdb classification). The example of coding
+table for protein domain can be found in file
+[reference_database_satellites_and_Ogre_domains.coding_table](./testing_data_protein_domains/reference_database_Ogre_domains.coding_table)
 
-The python command:
+###  Neighborhood density profiles
+The neighborhood profiles of the satellites are evaluated as describe above with
+some modification - the coding table used for the analysis is file concatatened
+from satellite coding table and domains coding table.
+
 ```sh
-/python_scripts/profiles_of_neighborhood_protein_domains.py -r coded_ogre_domains -w 10000 -c /testing_data_protein_domains/reference_database_satellites_and_Ogre_domains.coding_table -s 100 -o coded_neighborhood_profiles
+/python_scripts/profiles_of_neighborhood_protein_domains.py -r coded_ogre_domains -w 10000 \
+   -c /testing_data_protein_domains/reference_database_satellites_and_Ogre_domains.coding_table \
+   -s 100 -o coded_neighborhood_profiles
 ```
 
-* Option -r takes the pseudocoded reads
-* Option -w takes the size of the window
-* Option -s takes the first n number of bases from which the incrementation will start 
-* Option -c takes the coding table
-* Option -o takes the name of the pdf output
+* -r file with coded reads
+* -w the size of the window
+* -s the first n number of bases from which the incrementation will start 
+* -c coding table
+* -o name of the pdf output file
+
+
+
+## Periodicity analysis
+**TODO**
 
 ## Examples of data visualisation
 
