@@ -120,7 +120,7 @@ conflict code **X**.
 The LASTZ output is parsed with the command:
 
 ```sh
-cat  lastz_out | /python_scripts/pseudocoded_reads_priorities.py -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table > coded_out
+cat  lastz_out | /python_scripts/similarity_search_to_coded_reads.py -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table > coded_out
 ```
 
 ### Analysis of repeat characteristics
@@ -253,14 +253,14 @@ Annotation of satellites and mobile element protein domains are combined in two
 step. First step creates coded reads based on the satellite annotation only:
 
 ```sh
-cat  lastz_out | python_scripts/pseudocoded_reads_priorities.py \
+cat  lastz_out | python_scripts/similarity_search_to_coded_reads.py \
     -c testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
 ```
 
 The second step add annotation of protein domains to previously satellite coded reads:
 
 ```sh
-/python_scripts/creating_pseudocoded_reads_protein_domains.py -i coded_out \
+/python_scripts/add_protein_domains_to_coded_reads.py -i coded_out \
   -c /testing_data_protein_domains/reference_database_Ogre_domains.coding_table -g  > coded_ogre_domains
 ```
 > - -i input file with previousle coded reads
