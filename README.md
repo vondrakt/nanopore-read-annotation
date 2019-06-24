@@ -208,13 +208,13 @@ left and right windows.
 
 ## Alternative annotation of repeats using protein domains
 
-Alternative annotation of repeats uses reference DNA sequences onyl for annotation of
+Alternative annotation of repeats uses reference DNA sequences only for annotation of
 satellites while mobile elements are annotated based on the similarity to
 conserved protein domains using DANTE tool. Both
-annotation are then combined together.
+annotations are then combined together.
 
 ### Annotation of satellites using LASTZ similarity search
-Search is performed against library reference satellited sequences:
+A search is performed against library reference satellited sequences:
 
 Example input data:
 
@@ -236,12 +236,12 @@ lastz testing_data_protein_domains/sample_nanopore_reads[multiple,unmask] \
 ### Annotation of mobile element using DANTE
 Detection of the retrotransposon protein coding domains in the read sequences
 was performed using DANTE, which is a bioinformatics tool available on the
-RepeatExplorer server (https://repeatexplorer-elixir.cerit-sc.cz). DANTE perform
+RepeatExplorer server (https://repeatexplorer-elixir.cerit-sc.cz). DANTE performs
 repeat annotation based on the similarity searches against the REXdb
 protein database (http://www.repeatexplorer.org)⁠. The hits were filtered to pass the
 following cutoff parameters: minimum identity = 0.3, min. similarity = 0.4, min.
 alignment length = 0.7, max. interruptions (frameshifts or stop codons) = 10,
-max. length proportion = 1.2, and protein domain type = ALL. Annotation obtain from DANTE
+max. length proportion = 1.2, and protein domain type = ALL. Annotation obtained from DANTE
 program in gff3 format were then used for further processing. Example of DANTE
 output is in file `testing_data_protein_domains/gff_sample` 
 
@@ -250,14 +250,14 @@ output is in file `testing_data_protein_domains/gff_sample`
 ### Parsing annotations to coded reads
 
 Annotation of satellites and mobile element protein domains are combined in two
-step. First step creates coded reads based on the satellite annotation only:
+steps. First step creates coded reads based on the satellite annotation only:
 
 ```sh
 cat  lastz_out | python_scripts/similarity_search_to_coded_reads.py \
     -c testing_data_protein_domains/reference_database_satellites.coding_table > coded_out
 ```
 
-The second step add annotation of protein domains to previously satellite coded reads:
+The second step adds annotation of protein domains to previously satellite coded reads:
 
 ```sh
 /python_scripts/add_protein_domains_to_coded_reads.py -i coded_out \
@@ -267,7 +267,7 @@ The second step add annotation of protein domains to previously satellite coded 
 > - -c coding table specific for protein domain
 > - -g gff file with protein domains annotation 
 
-The coding table specific for protein domains contain information about domain
+The coding table specific for protein domains contains information about domain
 classification and type(according REXdb classification). The example of coding
 table for protein domain can be found in file
 [reference_database_satellites_and_Ogre_domains.coding_table](./testing_data_protein_domains/reference_database_Ogre_domains.coding_table)
@@ -293,8 +293,8 @@ from satellite coding table and domains coding table.
 
 ## Periodicity analysis
 
-Periodicity analysis is performed on sequences in fasta file contains. Each
-sequence in fasta file must contain array of single satellite type.
+Periodicity analysis is performed on sequences in a fasta file. Each
+sequence in fasta file must contain an array of single satellite type.
 For analysis, only arrays with length over 30kb were used. Non
 satellite sequences were trimmed off. 
 
@@ -306,8 +306,8 @@ R_scripts/get_periodicity_spectra.R  *.fasta
 Output is writtent into files `*.fasta_periodicity_fft.RDS` and
 `*.fasta_periodicity_acf.RDS` which contain periodicity spectra calculated by
 fast Fourier transform and by autocorelation respectively. Each output file
-represent R object which contain periodicity spectra for every analyzed
-satellite array in form of list.
+represent an R object which contains periodicity spectra for every analyzed
+satellite array in form of a list.
 
 
 
