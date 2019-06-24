@@ -112,7 +112,7 @@ distinguished using upper and lower case codes. In case of retrotransposons
 repeats, orientation is not recorded and thus codes are only uppercase. The
 arrays of similarity hits which are shorter than the *minimum length* are
 filtered out. When similarity hits to different type of repeats are detected on
-the same region of the read, the code with the higher *priority* (i.e. lower
+the same region of the read, the code with the higher *priority* (i.e. higher
 numerical value ) is recorded. On the other hand, if overlapping similarity hits
 to different repeat has the same priority, such regions are assigned a
 conflict code **X**.
@@ -175,7 +175,7 @@ represents one bin. Each group has it's own cumulative length table.
 Example of binned table:
 
 
-| Sum_of_length (Intact) | Sum_of_length (Truncated) | Frequency(intact) | Frequency(truncated) |
+| Sum of length (Intact) | Sum of length (Truncated) | Frequency(intact) | Frequency(truncated) |
 |------------------------|---------------------------|-------------------|----------------------|
 |                      0 |                         0 |                 0 |                    0 |
 |                      0 |                         0 |                 0 |                    0 |
