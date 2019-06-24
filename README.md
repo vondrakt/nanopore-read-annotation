@@ -39,21 +39,22 @@ versus reverse orientation (A2)).
 <hr>
 
 ## Annotation of satellite repeats
-The goal of this pipeline is to provide annotation of satellite repeats in
-Oxford Nanopore reads using similarity search against library of reference
-satellite sequences. Information about position, orientation and type of
-the satellite repeat in individual Nanopore reads is stored as sequence of
-characters in *coded reads*.
+The goal of this workflow is to characterize genomic organization of satellite repeat arrays 
+by analyzing their sequences in ultra-long nanopore reads. The satellite arrays are identified
+in the reads using similarity searches against a library of reference sequences. Information about 
+positions and orientations of the identified arrays in individual nanopore reads is 
+stored as sequences of characters in corresponding *coded reads*. The coded reads are then used
+for downsteam analyses.
 
-The pipeline consists of three main steps: 
+The workflow consists of three main steps: 
  - Similarity search against reference library of satellite repeats using LASTZ
  program
  - Parsing similarity hits to coded reads
  - Analysis of satellite arrays characteristics.
 
 ### Running the LASTZ similarity search
-The first step in the pipline is to run the LASTZ alignment program and
-filtering similarity hits. For that a fasta file with Nanopore reads and a file
+The first step in the pipline is to run the LASTZ program and
+filter similarity hits. For that a fasta file with Nanopore reads and a file
 with reference sequences is needed.
 
 The example of input data:
@@ -63,7 +64,7 @@ Nanopore reads: `/testing_data/sample_nanopore_reads`
 The reference sequences: `/testing_data/reference_database_satellite_and_retrotransposons`
 
 The LASTZ tabular output is first filtered of comment lines which begin with a '#' and sorted based on Nanopore read name.
-Promptly the filtered output is passed to a python script which will filter the
+The filtered output is then passed to a python script which filters the
 output based on a minimum bitscore value and maximum length of hit.(Fig 1A-C)
 
 The LASTZ command and filtering:
@@ -104,13 +105,13 @@ Example of coding table format:
 
 
 The *repeat name* in the coding table must correspond to the ID used in reference
-sequence library followed by double underscore. For example fasta sequence name
-`>LasTR3__11_9_sc_0.503375_l_49`  correspond to repeat name `LasTR3`. 
+sequence database followed by double underscore. For example fasta sequence name
+`>LasTR3__11_9_sc_0.503375_l_49`  corresponds to the repeat name `LasTR3`. 
 
-For satellite sequences, forward and reverse orientation of the repeat is
-distinguished using upper and lower case codes. In case of retrotransposons
+For satellites and other tandem repeats, forward and reverse orientation of is
+distinguished using upper and lower case codes. In case of other
 repeats, orientation is not recorded and thus codes are only uppercase. The
-arrays of similarity hits which are shorter than the *minimum length* are
+regions of similarity hits which are shorter than the *minimum length* are
 filtered out. When similarity hits to different type of repeats are detected on
 the same region of the read, the code with the higher *priority* (i.e. higher
 numerical value ) is recorded. On the other hand, if overlapping similarity hits
@@ -125,13 +126,13 @@ cat  lastz_out | /python_scripts/similarity_search_to_coded_reads.py -c /testing
 
 ### Analysis of repeat characteristics
 
-In this steps, coded reads are analyzed to quantify occurence of arrays of repeats
+In these steps, coded reads are analyzed to quantify occurences of satellite arrays
 in the reads, arrays length distribution and association (co-occurence) of
 individual repeat types (Fig.1F-G). 
 
 #### Array lengths summary
 
-The length of array of repeats is calculated from coded reads using command:
+The array lenghts are analysed in coded reads using command:
 ```sh
 python_scripts/satellite_size_distribution.py -i coded_out -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_length_table
 ```
@@ -141,10 +142,10 @@ python_scripts/satellite_size_distribution.py -i coded_out -s 100 -c /testing_da
 > - -c the coding table used for read coding
 > - -o output file name
 
-Output `coded_length_table` summarized all individual arrays from different
-groups as well as their characteristics, extracted from the coded reads. It
-contains five columns: the array name, the array length, encoding, read
-length and a column which indicates whether the array is intact or truncated.
+Output `coded_length_table` provides information about all repeat regions
+identified in the reads. It contains five columns: the repeat name, 
+the array length, encoding, read length and a column which indicates whether the 
+array is intact or truncated.
 
 Example of length table:
 
@@ -170,7 +171,7 @@ command:
 Output `cummulative_bining_table` contains four columns: summed lengths for
 intact arrays, summed length for truncated arrays and two more columns for the
 frequncy of occurence for intact and truncated arrays within each bin. Each row
-represents one bin. Each group has it's own cumulative length table.
+represents one bin. Each repeat has it's own cumulative length table.
 
 Example of binned table:
 
@@ -185,8 +186,8 @@ Example of binned table:
 
 #### Neighborhood density profiles
 
-To quantify and visualize the association of different groups of satellites and
-mobile elements, surrounding of each satellite types is analyzed:
+This si to quantify and visualize the association of different families of satellites and
+mobile elements in the genome:
 ```sh
 /python_scripts/profile_of_neighborhood.py -r coded_out -w 10000 -s 100 -c /testing_data/reference_database_satellite_and_retrotransposons.coding_table -o coded_neighborhood_profile
 ```
@@ -198,10 +199,10 @@ mobile elements, surrounding of each satellite types is analyzed:
 
 The output `coded_neighborhood_profile` table provides a density profile left
 and right of each array of a satellite group. The window size of the profile can
-be changed but in this case the window size is 10 kb. Each group has it's own
+be changed but in this case the window size is 10 kb. Each repeat has it's own
 output. The columns in the table match the positions within the windows left and
-right, while the rows correspond to different groups. Furthermore a base count
-table for each group is made. It is a profile of all the bases counted in the
+right, while the rows correspond to different repeats. Furthermore a base count
+table for each repeat is made. It is a profile of all the bases counted in the
 left and right windows.
 
 
