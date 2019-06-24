@@ -175,7 +175,7 @@ represents one bin. Each group has it's own cumulative length table.
 Example of binned table:
 
 
-| Sum of length (Intact) | Sum of length (Truncated) | Frequency(intact) | Frequency(truncated) |
+| sum of length (Intact) | sum of length (Truncated) | frequency(intact) | frequency(truncated) |
 |------------------------|---------------------------|-------------------|----------------------|
 |                      0 |                         0 |                 0 |                    0 |
 |                      0 |                         0 |                 0 |                    0 |
