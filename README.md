@@ -8,7 +8,7 @@ Koblížková, Pavel Neumann and Jiří Macas
 **Dependencies**
 - python3 (https://www.python.org) with Biopython (https://biopython.org/)
 - R programming environment (https://www.r-project.org/) with installed packages
-  Rfast, TRclust and  Biostrings (http://www.bioconductor.org/)
+  Rfast, TSclust and  Biostrings (http://www.bioconductor.org/)
 - LASTZ program (https://github.com/lastz/lastz)
 
 The text includes scripts and instruction how to annotate Oxford Nanopore reads
